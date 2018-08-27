@@ -69,11 +69,141 @@ function initGL(canvas) {
     mat4.translate(projectionMatrix, projectionMatrix, [0, 0, -40]);
 }
 
+function createOctahedron(gl, translation, rotationAxis, translationAxis, altTranslation) {
+  // Vertex Data
+  var vertexBuffer2;
+  vertexBuffer2 = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer2);
+
+  var v1 = [0.0, -.75, 0.0];
+  var v2 = [-.75, 0.0, 0.0];
+  var v3 = [0.0, 0.0, .75];
+  var v4 = [.75, 0.0, 0.0];
+  var v5 = [0.0, 0.0, -.75];
+  var v6 = [0.0, .75, 0.0];
+
+
+  var verts = [
+     //bottom face 1
+     ...v1, ...v2, ...v3,
+
+     //bottom face 2
+     ...v1, ...v3, ...v4,
+
+     //bottom face 3
+     ...v1, ...v4, ...v5,
+
+     //bottom face 4
+     ...v1, ...v5, ...v2,
+
+     //top face 1
+     ...v6, ...v2, ...v3,
+
+     //top face 2
+     ...v6, ...v3, ...v4,
+
+     //top face 3
+     ...v6, ...v4, ...v5,
+
+     //top face 4
+     ...v6, ...v5, ...v2
+     ];
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+  // Color data
+  var colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  var faceColors = [
+      [0.0, 0.0, 1.0, 1.0],
+      [1.0, 1.0, 0.0, 1.0],
+      [0.4, 0.6, 0.2, 1.0],
+      [0.0, 1.0, 0.0, 1.0],
+      [1.0, 0.0, 1.0, 1.0],
+      [1.0, 0.0, 0.0, 1.0],
+      [1.0, 0.6, 0.4, 1.0],
+      [0.0, 1.0, 1.0, 1.0],
+  ];
+
+  var vertexColors = [];
+
+  // Each vertex must have the color information, that is why the same color is concatenated 3 times, one for each vertex of the octahedron's face.
+
+  for (const color of faceColors)
+    for (var j=0; j < 3; j++)
+        vertexColors = vertexColors.concat(color);
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
+
+  // Defines the triangles to be drawn
+  var octahedronIndexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, octahedronIndexBuffer);
+  var octahedronIndices = [
+      0, 1, 2,
+      3, 4, 5,
+      6, 7, 8,
+      9, 10, 11,
+      12, 13, 14,
+      15, 16, 17,
+      18, 19, 20,
+      21, 22, 23
+  ];
+
+  // gl.ELEMENT_ARRAY_BUFFER: Buffer used for element indices.
+  // Uint16Array: Array of 16-bit unsigned integers.
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(octahedronIndices), gl.STATIC_DRAW);
+
+  var octahedron = {
+          buffer:vertexBuffer2, colorBuffer:colorBuffer, indices:octahedronIndexBuffer,
+          vertSize:3, nVerts:24, colorSize:4, nColors: 24, nIndices:24,
+          primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
+
+  mat4.translate(octahedron.modelViewMatrix, octahedron.modelViewMatrix, translation);
+
+  var timerun = 0;
+  var up = true;
+
+  octahedron.update = function() {
+      var now = Date.now();
+      var deltat = now - this.currentTime;
+      this.currentTime = now;
+      var fract = deltat / duration;
+      var angle = Math.PI * 2 * fract;
+
+      //Variable "up" determines the direction the triangle will move each frame.
+      //It is inverted every time the time counter reaches ~4.3 seconds, and the counter is reset
+      timerun += deltat;
+      mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
+
+      if(up)
+      {
+          mat4.translate(this.modelViewMatrix, this.modelViewMatrix, translationAxis);
+      }
+
+      else
+      {
+          mat4.translate(this.modelViewMatrix, this.modelViewMatrix, altTranslation);
+      }
+
+      if(timerun >= 4300)
+      {
+          up = !up;
+          timerun = 0;
+      }
+      console.log(timerun);
+      console.log(up);
+  };
+
+  return octahedron;
+}
+
 function createPyramid(gl, translation, rotationAxis) {
   // Vertex Data
   var vertexBuffer;
   vertexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+
 
   var v1 = [0.0, -1.5, -1.0];
   var v2 = [-.95, -1.5, -.31];
@@ -83,21 +213,21 @@ function createPyramid(gl, translation, rotationAxis) {
   var v6 = [0.0, 1.0, 0.0];
 
   var verts = [
-     //Base
+     //Pentagon base
      ...v1, ...v2, ...v3, ...v4, ...v5,
 
-     //Face 1
+     //tri face 1
      ...v1, ...v2, ...v6,
 
-     //Face 2
+     //tri face 2
      ...v2, ...v3, ...v6,
 
-     //Face 3
+     //tri face 3
      ...v3, ...v4, ...v6,
-     //Face 4
+     //tri face 4
      ...v4, ...v5, ...v6,
 
-     //Face 5
+     //tri face 5
      ...v5, ...v1, ...v6,
      ];
 
@@ -117,7 +247,7 @@ function createPyramid(gl, translation, rotationAxis) {
 
   var vertexColors = [];
 
-  // Assign color
+  //for loop that assigns color to each vertex. Uses an array that has the number of vertices in each face.
   var vertices = [5, 3, 3, 3, 3, 3]
 
   var j = 0;
@@ -146,131 +276,24 @@ function createPyramid(gl, translation, rotationAxis) {
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(pyramidIndices), gl.STATIC_DRAW);
 
   var pyramid = {
-    buffer:vertexBuffer, colorBuffer:colorBuffer, indices:pyramidIndexBuffer,
-    vertSize:3, nVerts:20, colorSize:4, nColors: 20, nIndices:24,
-    primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
+          buffer:vertexBuffer, colorBuffer:colorBuffer, indices:pyramidIndexBuffer,
+          vertSize:3, nVerts:20, colorSize:4, nColors: 20, nIndices:24,
+          primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
+
   mat4.translate(pyramid.modelViewMatrix, pyramid.modelViewMatrix, translation);
 
 
   pyramid.update = function() {
-    var now = Date.now();
-    var deltat = now - this.currentTime;
-    this.currentTime = now;
-    var fract = deltat / duration;
-    var angle = Math.PI * 2 * fract;
-    var goUp = false;
-    mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
+      var now = Date.now();
+      var deltat = now - this.currentTime;
+      this.currentTime = now;
+      var fract = deltat / duration;
+      var angle = Math.PI * 2 * fract;
+      var up = false;
+      mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
   };
 
   return pyramid;
-}
-
-function createOctahedron(gl, translation, rotationAxis, translationAxis, altTranslation) {
-  // Vertex Data
-  var vertexBuffer2;
-  vertexBuffer2 = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer2);
-
-  var v1 = [0.0, -.75, 0.0];
-  var v2 = [-.75, 0.0, 0.0];
-  var v3 = [0.0, 0.0, .75];
-  var v4 = [.75, 0.0, 0.0];
-  var v5 = [0.0, 0.0, -.75];
-  var v6 = [0.0, .75, 0.0];
-
-
-  var verts = [
-     //Face 1 Bottom
-     ...v1, ...v2, ...v3,
-     //Face 2 Bottom
-     ...v1, ...v3, ...v4,
-     //Face 3 Bottom
-     ...v1, ...v4, ...v5,
-     //Face 4 Bottom
-     ...v1, ...v5, ...v2,
-
-     //Face 1 Top
-     ...v6, ...v2, ...v3,
-     //Face 2 Top
-     ...v6, ...v3, ...v4,
-     //Face 3 Top
-     ...v6, ...v4, ...v5,
-     //Face 4 Top
-     ...v6, ...v5, ...v2
-     ];
-
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
-
-  // Color data
-  var colorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  var faceColors = [
-      [0.0, 0.0, 1.0, 1.0],
-      [1.0, 1.0, 0.0, 1.0],
-      [0.4, 0.6, 0.2, 1.0],
-      [1.0, 0.0, 1.0, 1.0],
-      [0.0, 1.0, 0.0, 1.0],
-      [1.0, 0.0, 0.0, 1.0],
-      [1.0, 0.6, 0.4, 1.0],
-      [0.0, 1.0, 1.0, 1.0],
-  ];
-
-  var vertexColors = [];
-  for (const color of faceColors)
-    for (var j=0; j < 3; j++)
-        vertexColors = vertexColors.concat(color);
-
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
-
-  // Defines the triangles to be drawn
-  var octahedronIndexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, octahedronIndexBuffer);
-  var octahedronIndices = [
-      0, 1, 2,
-      3, 4, 5,
-      6, 7, 8,
-      9, 10, 11,
-      12, 13, 14,
-      15, 16, 17,
-      18, 19, 20,
-      21, 22, 23
-  ];
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(octahedronIndices), gl.STATIC_DRAW);
-
-  var octahedron = {
-    buffer:vertexBuffer2, colorBuffer:colorBuffer, indices:octahedronIndexBuffer,
-    vertSize:3, nVerts:24, colorSize:4, nColors: 24, nIndices:24,
-    primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
-  mat4.translate(octahedron.modelViewMatrix, octahedron.modelViewMatrix, translation);
-
-  var runtime = 0;
-  var goUp = true;
-
-  // Move shape up and down
-  octahedron.update = function() {
-    var now = Date.now();
-    var deltat = now - this.currentTime;
-    this.currentTime = now;
-    var fract = deltat / duration;
-    var angle = Math.PI * 2 * fract;
-
-    //Determine direction of movement (up/down) every 4.5 seconds
-    runtime += deltat;
-    mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
-
-    if (goUp) {
-      mat4.translate(this.modelViewMatrix, this.modelViewMatrix, translationAxis);
-    } else {
-      mat4.translate(this.modelViewMatrix, this.modelViewMatrix, altTranslation);
-    }
-
-    if(runtime >= 4500) {
-      goUp = !goUp;
-      runtime = 0;
-    }
-  };
-
-  return octahedron;
 }
 
 function createShader(gl, str, type)
