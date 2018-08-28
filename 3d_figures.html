@@ -16,10 +16,11 @@
     initViewport(gl, canvas);
     initGL(canvas);
     // TO DO: create and draw the figures
-    var pyramid = createPyramid(gl, [-1.5, .3, -5], [0.1, 1.0, 0.2]);
-    var octahedron = createOctahedron(gl, [1.5, -1.3, -5], [0, 1, 0], [0, .01, 0], [0, -.01, 0]);
+    var pyramid = createPyramid(gl, [-3, .3, -5], [0.1, 1.0, 0.2]);
+    var scutoid = createScutoid(gl, [0, 0, -12], [-0.4, 1.0, 0.1]);
+    var octahedron = createOctahedron(gl, [3, -1.3, -5], [0, 1, 0], [0, .01, 0], [0, -.01, 0]);
     initShader(gl);
-    run(gl, [octahedron, pyramid]);
+    run(gl, [pyramid, scutoid, octahedron]);
 	});
 
 </script>
@@ -27,7 +28,7 @@
 </head>
 <body>
 
-  <canvas id="webglcanvas" style="border: none;" width="900" height="600"></canvas>
+  <canvas id="webglcanvas" style="border: none;" width="1200" height="600"></canvas>
 
 </body>
 </html>

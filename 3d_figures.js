@@ -264,13 +264,154 @@ function createOctahedron(gl, translation, rotationAxis, translationAxis, altTra
       mat4.translate(this.modelViewMatrix, this.modelViewMatrix, altTranslation);
     }
 
-    if(runtime >= 4500) {
+    if(runtime >= 3000) {
       goUp = !goUp;
       runtime = 0;
     }
   };
 
   return octahedron;
+}
+
+function createScutoid(gl, translation, rotationAxis) {
+  // Vertex Data
+  let vertexBuffer;
+  vertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+  let pentagonVerts = [
+    [Math.cos((-126*Math.PI)/180), -2.0,  (-1*Math.sin((-126*Math.PI)/180))],
+    [Math.cos((-54*Math.PI)/180), -2.0,  (-1*Math.sin((-54*Math.PI)/180))],
+    [Math.cos((18*Math.PI)/180), -2.0,  (-1*Math.sin((18*Math.PI)/180))],
+    [0.0, -2.0, -1.0], // 3
+    [Math.cos((162*Math.PI)/180), -2.0,  (-1*Math.sin((162*Math.PI)/180))]
+  ]
+  let pointVertex = [0.0,  0.0,  -1.0];
+  let hexagonVerts = [
+    [Math.cos((-120*Math.PI)/180), 2.0,  (-1*Math.sin((-120*Math.PI)/180))],
+    [Math.cos((-60*Math.PI)/180), 2.0,  (-1*Math.sin((-60*Math.PI)/180))],
+    [Math.cos((0*Math.PI)/180), 2.0,  (-1*Math.sin((0*Math.PI)/180))],
+    [Math.cos((60*Math.PI)/180), 2.0,  (-1*Math.sin((60*Math.PI)/180))],
+    [Math.cos((120*Math.PI)/180), 2.0,  (-1*Math.sin((120*Math.PI)/180))],
+    [Math.cos((180*Math.PI)/180), 2.0,  (-1*Math.sin((180*Math.PI)/180))]
+  ]
+  let verts = [];
+  verts = verts.concat(pentagonVerts[0]); // 0
+  verts = verts.concat(pentagonVerts[1]); // 1
+  verts = verts.concat(pentagonVerts[2]); // 2
+  verts = verts.concat(pentagonVerts[3]); // 3
+  verts = verts.concat(pentagonVerts[4]); // 4
+
+  verts = verts.concat(pentagonVerts[0]); // 5
+  verts = verts.concat(pentagonVerts[1]); // 6
+  verts = verts.concat(hexagonVerts[1]); // 7
+  verts = verts.concat(hexagonVerts[0]); // 8
+
+  verts = verts.concat(pentagonVerts[1]); // 9
+  verts = verts.concat(pentagonVerts[2]); // 10
+  verts = verts.concat(hexagonVerts[2]); // 11
+  verts = verts.concat(hexagonVerts[1]); // 12
+
+  verts = verts.concat(pentagonVerts[2]); // 13
+  verts = verts.concat(pentagonVerts[3]); // 14
+  verts = verts.concat(pointVertex); // 15
+  verts = verts.concat(hexagonVerts[3]); // 16
+  verts = verts.concat(hexagonVerts[2]); // 17
+
+  verts = verts.concat(pointVertex); // 18
+  verts = verts.concat(hexagonVerts[4]); // 19
+  verts = verts.concat(hexagonVerts[3]); // 20
+
+
+  verts = verts.concat(pentagonVerts[3]); // 21
+  verts = verts.concat(pentagonVerts[4]); // 22
+  verts = verts.concat(hexagonVerts[5]); // 23
+  verts = verts.concat(hexagonVerts[4]); // 24
+  verts = verts.concat(pointVertex); // 25
+
+  verts = verts.concat(pentagonVerts[4]); // 26
+  verts = verts.concat(pentagonVerts[0]); // 27
+  verts = verts.concat(hexagonVerts[0]); // 28
+  verts = verts.concat(hexagonVerts[5]); // 29
+
+  verts = verts.concat(hexagonVerts[0]); // 30
+  verts = verts.concat(hexagonVerts[1]); // 31
+  verts = verts.concat(hexagonVerts[2]); // 32
+  verts = verts.concat(hexagonVerts[3]); // 33
+  verts = verts.concat(hexagonVerts[4]); // 34
+  verts = verts.concat(hexagonVerts[5]); // 35
+
+  console.log("verts",verts);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+  // Colors
+  let colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  let faceColors = [
+      [1.0, 0.0, 0.0, 1.0], // Top Base
+      [0.0, 1.0, 0.0, 1.0],
+      [0.0, 0.0, 1.0, 1.0],
+      [1.0, 1.0, 0.0, 1.0],
+      [1.0, 0.0, 1.0, 1.0],
+      [0.0, 1.0, 1.0, 1.0],
+      [1.0, 0.5, 1.0, 1.0],
+      [0.5, 0.0, 0.5, 1.0], // Bottom Base
+  ];
+
+  var vertexColors = [];
+  for(let i = 0; i<5;i++) // Pentagon
+  vertexColors = vertexColors.concat(faceColors[0]);
+  for(let i = 0; i<4;i++)
+  vertexColors = vertexColors.concat(faceColors[1]);
+  for(let i = 0; i<4;i++)
+  vertexColors = vertexColors.concat(faceColors[2]);
+  for(let i = 0; i<5;i++)
+  vertexColors = vertexColors.concat(faceColors[3]);
+  for(let i = 0; i<3;i++)
+  vertexColors = vertexColors.concat(faceColors[4]);
+  for(let i = 0; i<5;i++)
+  vertexColors = vertexColors.concat(faceColors[5]);
+  for(let i = 0; i<4;i++)
+  vertexColors = vertexColors.concat(faceColors[6]);
+  for(let i = 0; i<6;i++) // Hexagon
+  vertexColors = vertexColors.concat(faceColors[7]);
+
+  console.log("vertexColors scutoid",vertexColors.length,verts.length);
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
+
+  // Index data (defines the triangles to be drawn).
+  let scutoidIndexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, scutoidIndexBuffer);
+  let scutoidIndices = [
+      0, 1, 2,   0, 2, 4,   4, 2, 3,
+      5, 6, 8,   6, 8, 7,
+      9, 10, 11,   11, 12, 9,
+      13, 16, 17,   13, 14, 16,  14,  15, 16,
+      18, 19, 20,
+      21, 24, 25,   21, 22, 24,   22, 23, 24,
+      26, 27, 28,   26, 28, 29,
+      30, 31, 32,   30, 32, 35,   32, 35, 33,   33, 34, 35
+  ];
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scutoidIndices), gl.STATIC_DRAW);
+
+  var scutoid = {
+      buffer:vertexBuffer, colorBuffer:colorBuffer, indices:scutoidIndexBuffer,
+      vertSize:3, nVerts:36, colorSize:4, nColors: 36, nIndices: scutoidIndices.length,
+      primtype:gl.TRIANGLES, modelViewMatrix: mat4.create(), currentTime : Date.now()};
+  mat4.translate(scutoid.modelViewMatrix, scutoid.modelViewMatrix, translation);
+
+  scutoid.update = function() {
+    var now = Date.now();
+    var deltat = now - this.currentTime;
+    this.currentTime = now;
+    var fract = deltat / duration;
+    var angle = Math.PI * 2 * fract;
+
+    mat4.rotate(this.modelViewMatrix, this.modelViewMatrix, angle, rotationAxis);
+  };
+
+  return scutoid;
 }
 
 function createShader(gl, str, type)
